@@ -1,0 +1,11 @@
+---
+description: Core ImFusion development principles and philosophy
+alwaysApply: true
+---
+
+# ImFusion Core Development Principles
+
+- Optimize for the reader, not the writer
+- KISS: prefer lean, pragmatic interfaces; avoid over-engineering
+- Medical device context: hold to high quality and safety standards
+- Keep PRs small; delete feature branches after merge

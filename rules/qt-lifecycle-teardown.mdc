@@ -1,0 +1,27 @@
+---
+description: Qt lifecycle and teardown safety for MainWindow/controller/widget ownership
+alwaysApply: true
+---
+
+# Qt Lifecycle and Teardown Safety
+
+- For objects with non-trivial destructors (controllers, annotation widgets), do not rely on implicit Qt child destruction if order matters.
+- If a child destructor touches `MainWindowBase`, `annotationModel()`, GL annotations, or display state, destroy that child explicitly in the owner destructor first.
+
+## Required Pattern for Manual Teardown
+
+- Remove from layout (`removeWidget`), detach (`setParent(nullptr)`), then `delete`.
+- Avoid half-manual ownership (`removeWidget` alone) for QObject trees.
+- After explicit delete, null member pointers used during shutdown paths.
+
+## `createWindowContainer` Rule
+
+- When using `QWidget::createWindowContainer`, keep a member pointer for the container widget.
+- If close-time crashes involve Qt/GL teardown, prefer explicit destruction of the container in owner destructor before base-class teardown.
+
+## Close-Crash Checklist
+
+- Verify destructor order: owner -> controller -> step widgets.
+- Verify no destructor calls into already-destroyed `MainWindowBase` internals.
+- Check for double-destruction paths from mixed Qt-parent and manual deletion.
+- Keep fixes minimal and targeted to ownership/order, not behavioral logic.

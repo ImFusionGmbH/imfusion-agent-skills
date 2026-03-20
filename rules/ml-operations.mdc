@@ -1,0 +1,81 @@
+---
+description: ImFusion ML Operations implementation and review guidelines
+globs: ImFusionLib/Include/ImFusion/ML/Operations/*.h,ImFusionLib/Source/ML/Operations/*.cpp
+alwaysApply: false
+---
+
+# ML Operations Guidelines
+
+Applies when implementing or modifying `ImFusion::ML::Operation` subclasses under `ImFusionLib/Include/ImFusion/ML/Operations` and `ImFusionLib/Source/ML/Operations`.
+
+## Class Structure
+- Derive from `ImFusion::ML::Operation` and place class in `ImFusion::ML` namespace.
+- Class names end with `Operation` (e.g., `AxisRotationOperation`).
+- Class names are usually verbs (e.g., `Normalize`, `Invert`).
+- Constructors must accept parameters with default values so the class remains default-constructible (e.g., `explicit FooOperation(int param = 3)`). Keep constructor defaults in sync with parameter member defaults.
+- Expose configuration via `AdvancedParameter<T>` members. Prefer `= value` initialization in headers.
+- Set an appropriate `ProcessingPolicy` in the constructor (`Everything`, `OnlyLabels`, or `EverythingExceptLabels`).
+
+## Processing Entry Points
+- Prefer overriding delegate methods over the main `process(DataItem&)`:
+  - `processImages`, `processBoxes`, `processPoints`, `processVectors`, `processTensors`.
+- Only override `process(DataItem&)` when you need to add/remove/swap/reorder fields (pipeline-level transforms).
+  - If so, disable the utility overloads with `ML_OPERATION_DISABLE_UTILITY_PROCESS`.
+- If the operation will not modify inputs, override `doesNotModifyInput()` and return `true`.
+- When overriding `process(DataItem&)`, use `m_activeFields` and/or the default `m_processingFieldsPolicy` to select the fields to be processed.
+- Try to perform operations in-place on the `DataElement`.
+- If you need to find the label map in the input data item, use `ML::Utils::isSemanticSegmentationMap`.
+
+## Parameters and Properties
+- Use `AdvancedParameter<T>` (or `OpParam<T>`) for all configurable parameters.
+- Parameters must be public and start with the `p_` prefix (e.g., `p_kernelSize`).
+- Names should be descriptive and consistent with Properties conventions (prefer `camelCase`) for the underlying property name.
+- Document units and value domains in Doxygen (e.g., `distanceMm`, `pixelToWorldMatrix`).
+- Mark required parameters with `ParamRequired::Yes`; otherwise provide sensible defaults.
+- Use `signalValueChanged` from Parameters to react on value changes.
+
+## Device, Performance, and GPU
+- Use `computingDevice()/setComputingDevice()` and `useGPU()` to choose device.
+- Call `prepareInputForDevice()` before GPU work; set `allowChannelBatchOnGPU()` only if supported.
+- Keep shared mutable state minimal; prefer copying over synchronization.
+- If possible, use ImageMath in the implementation so that both CPU and GPU implementations are available.
+
+## Exceptions, Logging, and Behavior
+- Throw errors via `throwOperationError(...)` (raises `OperationException` with proper domain).
+- Use `warnOperationUnexpectedBehaviour(...)` for non-fatal anomalies and honor `errorOnUnexpectedBehaviour()`.
+- Use `inputIsEmptyOrNull(...)` guard helpers where applicable.
+
+## Inversion and Recording
+- If supporting inversion, implement accordingly and override `supportsInversion()`.
+- Use `recordIdentifier()` to tag operations in processing history when inversion/recording is intended.
+
+## Factory Registration
+- Register the operation in the C++ Operation factory so it can be constructed by name:
+  - Get the C++ sub-factory via `ImFusion::ML::getCppOperationFactory()`.
+  - Register your class with a unique operation name (typically the class name without namespace).
+
+## Python Bindings and Changelog
+- Add the new operation to Python bindings in `ImFusionLib/Source/ML/PythonBindings/OperationsBindings.cpp` using the appropriate `ml_bind_class_doc*` helper.
+- Add a changelog entry to `ImFusionLib/Source/ML/Changelog.yaml` with the correct tags (Added/Changed/Fixed/Deprecation/API-Break), referencing the exact class name.
+
+## Doxygen and Grouping
+- Document the class and public/protected members.
+- Use `\ingroup MLDataOperations` to group meta-operations and `\ingroup MLOperations` for actual ML operations.
+- Do not use `\author` or `\brief`; the first sentence is used as summary.
+
+## Implementation Checklist
+- [ ] Class in `ImFusion::ML`, ends with `Operation`, constructor sets `ProcessingPolicy`.
+- [ ] Add files to `CMakeLists.txt` of the ML pluigin.
+- [ ] Public parameters as `AdvancedParameter<T>`/`OpParam<T>` with `p_` prefix and defaults; units documented.
+- [ ] Override appropriate delegate(s); avoid overriding `process(DataItem&)` unless restructuring fields.
+- [ ] Proper device handling and GPU preparation; channel batching supported only when safe.
+- [ ] Use `throwOperationError`/`warnOperationUnexpectedBehaviour`; no raw exceptions for routine failures.
+- [ ] If non-mutating, implement `doesNotModifyInput()`.
+- [ ] Operation registered in C++ factory with unique name.
+- [ ] Python bindings added in `OperationsBindings.cpp` with docstrings and named args.
+- [ ] ML changelog updated in `ImFusionLib/Source/ML/Changelog.yaml`.
+- [ ] Add a C++ test in the `ImFusionLib/Source/ML/Test/Operations` folder.
+- [ ] Add a test case to `test_MLOperations.py` 
+
+@ml-operation-header-template.h
+@ml-operation-cpp-template.cpp
