@@ -85,3 +85,6 @@ PostProcessing:
 
 Intensity transforms come from the model plans. Do not guess them; extract them from the training/export pipeline.
 
+### Checklist
+
+* For 3D ONNX exports, check both input and output tensor layouts: input should be N,C,D,H,W as consumed by ImFusion, while output channels remain axis 1.
