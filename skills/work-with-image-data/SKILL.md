@@ -191,6 +191,8 @@ Direct pixel intensities access functions this will return raw (storage) values 
 This is important to consider when operating on several images, or when using a reference value (e.g. threshold an image with respect to 1000 Hounsfield units).
 Use functions like `shift()`, `scale()` and `storageToOriginal()` to handle intensities consistently.
 
+Refer to the C++ documentation `Pixel Value Domains` for more information.
+
 ---
 
 ## Pitfalls

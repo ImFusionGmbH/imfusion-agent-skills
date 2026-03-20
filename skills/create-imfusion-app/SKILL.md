@@ -78,12 +78,26 @@ int main(int argc, char** argv)
 
 ## Windows Runtime Bootstrap
 
-On Windows, start with only these post-build copies when they are required by your app:
-- `onnxruntime.dll`
-- `onnxruntime_providers_shared.dll`
-- `platforms/qwindows.dll`
+`imfusion_set_common_target_properties()` already configures the Visual Studio debugger `PATH` and `QT_PLUGIN_PATH` so that all SDK and Qt DLLs are found automatically when running inside the IDE.
 
-If your app uses Qt UI, make sure the Qt platform plugin is available beside the executable or in a configured Qt plugin path.
+### Exception: ONNX Runtime version mismatch
+
+When your app uses `ImFusionML`, a different `onnxruntime.dll` already present on the system `PATH` (e.g. Windows) may load before the SDK-provided one. The symptom is a startup error like:
+
+> `The requested API version [N] is not available, only API versions [...] are supported`
+
+Fix: copy only `onnxruntime.dll` next to the exe as a post-build step. Because the exe's own directory is searched first on Windows, this guarantees the correct version wins.
+
+```cmake
+# Only needed when using ImFusionML: ensures the SDK-bundled onnxruntime.dll
+# is found before any incompatible version that may be present on PATH.
+add_custom_command(TARGET MyApp POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE_DIR:ImFusionLib>/onnxruntime.dll"
+        "$<TARGET_FILE_DIR:MyApp>"
+)
+```
+
 
 ## When To Add Extra Debug Environment
 
@@ -97,14 +111,11 @@ If needed:
 
 ## Fast Triage
 
-- `qt.qpa.plugin ... "windows"`
-  -> missing Qt platform plugin path or missing `qwindows.dll`
-
 - ONNX API mismatch (`requested X, supported Y`) on Windows
-  -> the wrong `onnxruntime.dll` was loaded first; verify `PATH` order and exe-local DLL copies
+  -> a stale `onnxruntime.dll` elsewhere on `PATH` loaded first; copy `onnxruntime.dll` from `$<TARGET_FILE_DIR:ImFusionLib>` next to the exe (see **ONNX Runtime version mismatch** above)
 
 - executable starts in the IDE but not from Explorer
-  -> runtime dependencies are coming from the debugger environment instead of the app folder
+  -> runtime dependencies are coming from the debugger environment instead of the app folder; verify the post-build copy step is present
 
 ## Completion Checklist
 
@@ -112,8 +123,6 @@ If needed:
 - [ ] No plugin registration macros or plugin classes are present
 - [ ] `imfusion_set_common_target_properties(...)` is configured
 - [ ] Required runtime DLL copies are configured for Windows
-- [ ] Debug and Release builds succeed
-- [ ] App startup smoke test succeeds outside the debugger when relevant
 
 ## Related Skills
 
