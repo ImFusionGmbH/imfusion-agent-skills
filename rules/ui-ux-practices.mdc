@@ -1,0 +1,22 @@
+---
+description: UI and UX best practices for plugins and applications
+alwaysApply: true
+---
+
+# UI / UX Best Practices
+
+Use this as a short checklist to consider when adding or changing UI behavior.
+
+- Initialize newly loaded data to a sensible visible state, including contrast/window-level when needed.
+
+- Show progress for long-running work such as loading, inference, export, or preprocessing.
+  * Bind progress UI to real algorithms or SDK progress when available.
+  * Keep progress indicators responsive while synchronous work runs on the UI thread.
+  * When the SDK is using OpenGL operations in the background thread, calls should be wrapped into `GL::ContextManager::get().runWithOpenGL`
+  * Return progress UI to a clear idle state after completion, failure, or cancellation.  
+
+- Remember user choices that should feel persistent across sessions.
+For instance, persist file and folder dialog locations when they improve workflow continuity.
+Store dialog history per parameter or per workflow, not as one shared path for unrelated actions.
+
+- Preserve responsive feedback for failures: show a concise error, keep prior valid state when possible, and avoid silent no-op behavior.
