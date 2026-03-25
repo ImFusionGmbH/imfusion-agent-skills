@@ -82,11 +82,11 @@ int main(int argc, char** argv)
 
 ### Exception: ONNX Runtime version mismatch
 
-When your app uses `ImFusionML`, a different `onnxruntime.dll` already present on the system `PATH` (e.g. Windows) may load before the SDK-provided one. The symptom is a startup error like:
+On Windows, a different `onnxruntime.dll` already present on the system `PATH` (e.g. Windows) may load before the SDK-provided one. The symptom is a startup error like:
 
 > `The requested API version [N] is not available, only API versions [...] are supported`
 
-Fix: copy only `onnxruntime.dll` next to the exe as a post-build step. Because the exe's own directory is searched first on Windows, this guarantees the correct version wins.
+Fix: always copy only `onnxruntime.dll` next to the exe as a post-build step. Because the exe's own directory is searched first on Windows, this guarantees the correct version wins.
 
 ```cmake
 # Only needed when using ImFusionML: ensures the SDK-bundled onnxruntime.dll
