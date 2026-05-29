@@ -1,0 +1,40 @@
+<!-- Auto-generated from cursor/rules/plugin.mdc — do not edit directly -->
+
+---
+paths:
+  - "**/CMakeLists.txt"
+  - "**/*Plugin.h"
+  - "**/*Plugin.cpp"
+---
+
+# ImFusion Plugin Conventions
+
+For step-by-step creation guide, see the `create-imfusion-plugin` skill.
+
+## Naming Pattern
+
+| Component | Pattern | Example |
+|-----------|---------|---------|
+| Include dir | `ImFusion/<ShortName>` | `ImFusion/MyPlugin` |
+| Namespace | `<ShortName>` under ImFusion | `ImFusion::MyPlugin` |
+| Plugin ID | `ImFusion.<ShortName>` | `ImFusion.MyPlugin` |
+| CMake target | `<ShortName>Plugin` | `MyPlugin` |
+| Library | `ImFusion<ShortName>Plugin.dll/so/dylib` | `ImFusionMyPlugin.dll` |
+| Plugin class | `<PluginName>Plugin` | `TorchPlugin` |
+| Factory classes | `<PluginName>AlgorithmFactory`, `<PluginName>AlgorithmControllerFactory` | |
+| Config file | Always `Config.h` | |
+
+## Key Requirements
+
+- Plugin class must inherit from `ImFusionLibPlugin`
+- `IMFUSION_REGISTER_PLUGIN` macro must be in the `.cpp` file (not the header)
+- Static `id()` must return `"ImFusion.<ShortName>"`
+- Implement `getAlgorithmFactory()`, `getAlgorithmControllerFactory()`, `pluginName()`
+- Config.h must use platform-aware export macros (Windows `__declspec`, no-op elsewhere)
+- Log category: `#define IMFUSION_LOG_DEFAULT_CATEGORY "MyPlugin"`
+
+## Common Mistakes
+
+- Module names in `imfusion_require_modules()` are case-sensitive: `"Base"` not `"BASE"`
+- `imfusion_set_common_target_properties(Plugin ...)` — use `Plugin`, not the target name
+- `imfusion_common_install(Plugin)` — same, use `Plugin`
