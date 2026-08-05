@@ -51,7 +51,7 @@ python -m twine check dist/*
 
 Before a release:
 
-1. Update the version in `pyproject.toml` and `src/imfusion_sdk_agent_kit/__init__.py`.
+1. Update the version in `pyproject.toml`.
 2. Run the complete test suite.
 3. Build from a clean checkout.
 4. Inspect and validate the wheel and source distribution.
