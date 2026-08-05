@@ -1,89 +1,125 @@
 # ImFusion SDK Agent Kit
 
-This repository contains rules and skills to help external developers create plugins and applications with the ImFusion SDK.
+Install project-level rules and skills that help AI coding agents build plugins and applications based on the ImFusion SDK.
 
-*Rules* are general coding guidelines loaded automatically by the AI agent when relevant files are open.
-*Skills* are step-by-step checklists invoked on demand for specific tasks.
+Rules provide focused coding guidance when relevant files are open. Skills provide reusable workflows for tasks such as creating a plugin, configuring CMake, and working with image data.
 
-## Repository structure
+## Install
 
-```
-cursor/
-├── rules/*.mdc          — Cursor rules (source of truth)
-└── skills/*/SKILL.md    — skill checklists
-
-claude/
-├── rules/*.md           — Claude Code rules (auto-generated)
-└── skills/*/SKILL.md    — skill checklists (auto-generated)
-
-AGENTS.md                — OpenCode rules (auto-generated)
-```
-
-`cursor/` is the only folder maintained by hand. `claude/` and `AGENTS.md` are generated from it by `scripts/generate_rules.py`.
-
-## Setup
-
-Add this repository as a git submodule in your project and symlink the tool-specific folders:
+The recommended installation uses [uv](https://docs.astral.sh/uv/getting-started/installation/) to install the CLI in an isolated environment:
 
 ```sh
-# Add as submodule
-git submodule add <repo-url> imfusion-agent-kit
-
-# Cursor
-ln -s imfusion-agent-kit/cursor .cursor
-
-# Claude Code
-ln -s imfusion-agent-kit/claude .claude
-
-# OpenCode
-ln -s imfusion-agent-kit/AGENTS.md AGENTS.md
+uv tool install imfusion-sdk-agent-kit
 ```
 
-After this, all three tools pick up rules and skills automatically with no further configuration.
+If uv is not available, install it with standard pip:
 
-> **Note:** if your project already has a `.cursor/` or `.claude/` folder, copy the `rules/` and `skills/` subfolders into the existing directory instead of symlinking the top level.
+```sh
+python -m pip install imfusion-sdk-agent-kit
+```
 
-### Cursor workspace (recommended)
+Python 3.10 or newer is required.
 
-For optimal results, use a Cursor workspace that also indexes the ImFusion SDK install folder and the public demos so Cursor can reference them directly.
+## Install into a project
 
-Create a `your-project.code-workspace` file and open it in Cursor:
+Run the command from the root of your ImFusion SDK project:
+
+```sh
+imfusion-sdk-agent-kit init --agent cursor,claude
+```
+
+Choose one or more comma-separated agents:
+
+```sh
+# Cursor
+imfusion-sdk-agent-kit init --agent cursor
+
+# Claude Code
+imfusion-sdk-agent-kit init --agent claude
+
+# OpenCode
+imfusion-sdk-agent-kit init --agent opencode
+
+# A project other than the current directory
+imfusion-sdk-agent-kit init --agent cursor,claude --project path/to/project
+```
+
+The command installs native project files:
+
+- Cursor: `.cursor/rules/` and `.cursor/skills/`
+- Claude Code: `.claude/rules/` and `.claude/skills/`
+- OpenCode: `.opencode/skills/`, `.opencode/references/`, and a managed section in `AGENTS.md`
+
+Use `--dry-run` to inspect changes. Use `--force` only when you intend to replace files that conflict with kit-managed paths.
+
+## Safe updates
+
+The installer merges into existing agent directories. It records installed file hashes in `.imfusion-sdk-agent-kit/manifest.json` and follows these rules on later runs:
+
+- unchanged kit-managed files are updated to the installed package version;
+- unrelated project files and existing `AGENTS.md` content are preserved;
+- user-modified or unknown same-named files stop the installation before any changes are written;
+- `--force` explicitly replaces those conflicts;
+- obsolete, unchanged managed files are removed, while modified obsolete files are kept and no longer managed.
+
+To update:
+
+```sh
+uv tool upgrade imfusion-sdk-agent-kit
+imfusion-sdk-agent-kit init --agent cursor,claude
+```
+
+With a regular Python environment, replace `uv tool upgrade` with `python -m pip install --upgrade imfusion-sdk-agent-kit`.
+
+## Remove installed guidance
+
+There is no automatic uninstall command in the initial release. Remove the installed ImFusion files listed in `.imfusion-sdk-agent-kit/manifest.json`, then remove `.imfusion-sdk-agent-kit/`. For OpenCode, remove only the section between:
+
+```text
+<!-- imfusion-sdk-agent-kit:start -->
+<!-- imfusion-sdk-agent-kit:end -->
+```
+
+Do not remove an entire `.cursor`, `.claude`, `.opencode`, or `AGENTS.md` path if it also contains project-owned content.
+
+## Cursor workspace recommendation
+
+The installed rules and skills describe ImFusion APIs, but they do not contain the SDK headers or complete example implementations. For better results, let Cursor index all three relevant codebases:
+
+1. Your project.
+2. Your local ImFusion SDK installation.
+3. The [ImFusion public demos](https://github.com/ImFusionGmbH/public-demos) checked out at the tag matching your SDK version, such as `imfusion-sdk-v4.4`.
+
+Create a multi-root workspace file such as `your-project.code-workspace` in your project root:
 
 ```json
 {
 	"folders": [
-		{ "path": "." },
-		{ "path": "C:/Program Files/ImFusion/ImFusion Suite" },
-		{ "path": "C:/public-demos" }
+		{ "name": "Project", "path": "." },
+		{
+			"name": "ImFusion SDK",
+			"path": "C:/Program Files/ImFusion/ImFusion Suite"
+		},
+		{ "name": "ImFusion public demos", "path": "C:/Dev/public-demos" }
 	],
 	"settings": {}
 }
 ```
 
-### Invoking skills
+Adjust the paths for your system, then open the `.code-workspace` file in Cursor.
+Cursor can then inspect SDK declarations and matching working examples when applying the installed guidance.
+The SDK and demos remain external dependencies; they are not copied into your project.
 
-Skills are not loaded automatically — invoke them by referencing the skill file in your prompt, e.g.:
+### Optional: index SDK documentation
 
-> *"Follow the checklist in `.cursor/skills/create-imfusion-algorithm/SKILL.md` to create a new algorithm."*
+Headers and demos cover most coding tasks, but conceptual guides and fuller API reference live in the official documentation at [docs.imfusion.com](https://docs.imfusion.com) (C++ and Python SDK developer docs).
 
-For Claude Code use `.claude/skills/…`, for OpenCode use `imfusion-agent-kit/cursor/skills/…`.
+In Cursor, add that site under **Settings → Indexing & Docs → Docs** so the agent can look up topics the installed rules and skills deliberately do not duplicate.
 
 ## Contributing
 
-The number of skills should be kept as low as possible.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, content guidelines, testing, and release preparation.
 
-Rules and skills should not duplicate information in the documentation, but focus on implicit knowledge, unexpected behaviour, or repeated errors made by AI agents. LLM-generated skills are generally not useful and can be erroneous or confusing.
+## License
 
-**Edit only `cursor/rules/*.mdc` and `cursor/skills/`.** Never edit `claude/` or `AGENTS.md` directly — they are auto-generated.
-
-After changing any rule or skill, regenerate the Claude Code and OpenCode files:
-
-```sh
-python3 scripts/generate_rules.py
-```
-
-A pre-commit hook does this automatically on every commit. Enable it once per clone:
-
-```sh
-git config core.hooksPath .githooks
-```
+Licensed under the [Apache License 2.0](LICENSE).

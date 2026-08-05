@@ -1,4 +1,0 @@
-#!/bin/sh
-set -e
-python3 scripts/generate_rules.py
-git add claude/rules/ claude/skills AGENTS.md
