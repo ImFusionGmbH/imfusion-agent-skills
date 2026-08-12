@@ -104,6 +104,33 @@ def test_opencode_preserves_existing_agents_content(tmp_path: Path) -> None:
 	assert (tmp_path / ".opencode/skills/create-imfusion-app/SKILL.md").is_file()
 
 
+def test_opencode_preserves_existing_line_endings(tmp_path: Path) -> None:
+	agents_file = tmp_path / "AGENTS.md"
+	agents_file.write_bytes(b"# Existing project guidance\r\n")
+
+	install(tmp_path, ("opencode",))
+
+	written = agents_file.read_bytes()
+	assert b"\r\n" in written
+	assert written.count(b"\n") == written.count(b"\r\n")
+
+
+def test_obsolete_block_is_removed_without_deleting_the_file(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	agents_file = tmp_path / "AGENTS.md"
+	agents_file.write_text("# Existing project guidance\n", encoding="utf-8")
+	install(tmp_path, ("opencode",))
+
+	monkeypatch.setattr(installer_module, "render_agents", lambda agents: [])
+	result = install(tmp_path, ("opencode",))
+
+	assert "remove obsolete block from AGENTS.md" in result.actions
+	content = agents_file.read_text(encoding="utf-8")
+	assert content == "# Existing project guidance\n"
+	assert AGENTS_START not in content
+
+
 def test_modified_opencode_block_is_a_conflict(tmp_path: Path) -> None:
 	install(tmp_path, ("opencode",))
 	agents_file = tmp_path / "AGENTS.md"
@@ -114,7 +141,9 @@ def test_modified_opencode_block_is_a_conflict(tmp_path: Path) -> None:
 		install(tmp_path, ("opencode",))
 
 
-def test_obsolete_unchanged_file_is_removed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_obsolete_unchanged_file_is_removed(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	old = RenderedFile(Path(".cursor/rules/old.mdc"), "old\n", "cursor")
 	monkeypatch.setattr(installer_module, "render_agents", lambda agents: [old])
 	install(tmp_path, ("cursor",))

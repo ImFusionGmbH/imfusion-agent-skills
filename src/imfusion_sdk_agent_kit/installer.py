@@ -7,12 +7,12 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from . import __version__
-from .renderers import AGENTS_END, AGENTS_START, RenderedFile, render_agents
+from .renderers import AGENTS_END, AGENTS_START, render_agents
 
 STATE_DIRECTORY = ".imfusion-sdk-agent-kit"
 MANIFEST_PATH = Path(STATE_DIRECTORY) / "manifest.json"
@@ -78,9 +78,7 @@ def _load_manifest(project: Path) -> dict:
 		or not isinstance(manifest.get("files"), dict)
 		or not isinstance(manifest.get("agents", []), list)
 	):
-		raise InstallationError(
-			f"Unsupported or invalid manifest at {MANIFEST_PATH.as_posix()}"
-		)
+		raise InstallationError(f"Unsupported or invalid manifest at {MANIFEST_PATH.as_posix()}")
 	for relative, record in manifest["files"].items():
 		if not isinstance(relative, str) or not isinstance(record, dict):
 			raise InstallationError(f"Invalid file record in {MANIFEST_PATH.as_posix()}")
@@ -111,15 +109,25 @@ def _remove_block(existing: str) -> str:
 	if block is None:
 		return existing
 	before, _, after = existing.partition(block)
-	return (before.rstrip() + "\n\n" + after.lstrip()).strip() + ("\n" if before.strip() or after.strip() else "")
+	return (before.rstrip() + "\n\n" + after.lstrip()).strip() + (
+		"\n" if before.strip() or after.strip() else ""
+	)
+
+
+def _existing_newline(path: Path) -> str:
+	if not path.exists():
+		return "\n"
+	with path.open("r", encoding="utf-8", newline="") as stream:
+		return "\r\n" if "\r\n" in stream.read() else "\n"
 
 
 def _atomic_write(path: Path, content: str) -> None:
+	newline = _existing_newline(path)
 	path.parent.mkdir(parents=True, exist_ok=True)
 	handle, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
 	temporary = Path(temporary_name)
 	try:
-		with os.fdopen(handle, "w", encoding="utf-8", newline="\n") as stream:
+		with os.fdopen(handle, "w", encoding="utf-8", newline=newline) as stream:
 			stream.write(content)
 		os.replace(temporary, path)
 	finally:
@@ -229,11 +237,8 @@ def install(
 		if record.get("kind") == "block":
 			block = _managed_block(existing)
 			if block is not None and _digest(block) == record.get("sha256"):
-				updated = _remove_block(existing)
-				if updated:
-					writes[path] = updated
-				else:
-					removals.append(path)
+				# The file itself may predate the kit, so strip the block but keep the file.
+				writes[path] = _remove_block(existing)
 				actions.append(f"remove obsolete block from {relative}")
 			else:
 				warnings.append(f"Kept modified obsolete block in {relative}")
@@ -251,7 +256,11 @@ def install(
 	manifest_file = _destination(project, MANIFEST_PATH)
 	if not manifest_file.exists() or _read_text(manifest_file) != manifest_text:
 		writes[manifest_file] = manifest_text
-		actions.append(f"update {MANIFEST_PATH.as_posix()}" if manifest_file.exists() else f"create {MANIFEST_PATH.as_posix()}")
+		actions.append(
+			f"update {MANIFEST_PATH.as_posix()}"
+			if manifest_file.exists()
+			else f"create {MANIFEST_PATH.as_posix()}"
+		)
 
 	if not dry_run:
 		for path in removals:

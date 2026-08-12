@@ -7,16 +7,41 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+
   test:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.10", "3.14"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -24,15 +49,38 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m pytest
 
+  uv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # setup-uv no longer publishes moving major tags, so this pin is exact.
+      - uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: true
+      - name: Verify uv.lock is up to date
+        run: uv lock --check
+      - run: uv sync --locked --extra dev
+      - run: uv run pytest
+
   package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
       - run: python -m pip install --upgrade pip build twine
       - run: python -m build
       - run: python -m twine check dist/*
-      - name: Inspect wheel contents
-        run: python -m zipfile --list dist/*.whl
+      - name: Verify assets are packaged
+        run: python .github/scripts/check_assets.py
+      - name: Smoke test the built wheel
+        run: |
+          python -m pip install dist/*.whl
+          imfusion-sdk-agent-kit --version
+          mkdir smoke
+          imfusion-sdk-agent-kit init --agent cursor,claude,opencode --project smoke
+          test -f smoke/.cursor/rules/cpp-guidelines.mdc
+          test -f smoke/.claude/skills/create-imfusion-plugin/SKILL.md
+          test -f smoke/.opencode/references/ml-operation-header-template.h
+          test -f smoke/AGENTS.md

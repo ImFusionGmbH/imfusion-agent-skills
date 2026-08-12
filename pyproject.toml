@@ -38,6 +38,7 @@ imfusion-sdk-agent-kit = "imfusion_sdk_agent_kit.cli:main"
 dev = [
 	"build",
 	"pytest>=8",
+	"ruff>=0.16,<0.17",
 	"twine",
 ]
 
@@ -54,3 +55,13 @@ imfusion_sdk_agent_kit = ["assets/**/*"]
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.format]
+indent-style = "tab"
+
+[tool.ruff.lint]
+select = ["B", "E4", "E7", "E9", "F", "I", "UP"]

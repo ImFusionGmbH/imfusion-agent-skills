@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from . import __version__
 from .installer import InstallationConflict, InstallationError, install
@@ -38,7 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
 		"--agent",
 		required=True,
 		type=_agents,
-		help="comma-separated agents: cursor, claude, opencode",
+		help=f"comma-separated agents: {', '.join(SUPPORTED_AGENTS)}",
 	)
 	init.add_argument(
 		"--project",
@@ -77,7 +77,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 		print(f"Error: {error}", file=sys.stderr)
 		return 1
 
-	prefix = "Would " if result.dry_run else ""
+	prefix = "[dry-run] " if result.dry_run else ""
 	for action in result.actions:
 		print(prefix + action)
 	for warning in result.warnings:

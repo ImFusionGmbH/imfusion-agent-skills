@@ -1,6 +1,6 @@
 ---
 description: After editing C++ or CMake files, compile and fix any errors
-globs:**/*.cpp,**/*.h,**/*.h.in,**/*.cmake,**/CMakeLists.txt
+globs: **/*.cpp,**/*.h,**/*.h.in,**/*.cmake,**/CMakeLists.txt
 alwaysApply: false
 ---
 

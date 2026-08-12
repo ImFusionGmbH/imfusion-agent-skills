@@ -1,12 +1,13 @@
 from pathlib import Path
 
+import pytest
+
+from imfusion_sdk_agent_kit import __version__
 from imfusion_sdk_agent_kit.cli import main
 
 
 def test_cli_installs_comma_separated_agents(tmp_path: Path, capsys) -> None:
-	exit_code = main(
-		["init", "--agent", "cursor,claude", "--project", str(tmp_path)]
-	)
+	exit_code = main(["init", "--agent", "cursor,claude", "--project", str(tmp_path)])
 
 	assert exit_code == 0
 	assert (tmp_path / ".cursor/rules").is_dir()
@@ -26,10 +27,26 @@ def test_cli_reports_conflict(tmp_path: Path, capsys) -> None:
 
 
 def test_cli_dry_run_prefixes_actions(tmp_path: Path, capsys) -> None:
-	exit_code = main(
-		["init", "--agent", "opencode", "--project", str(tmp_path), "--dry-run"]
-	)
+	exit_code = main(["init", "--agent", "opencode", "--project", str(tmp_path), "--dry-run"])
 
 	assert exit_code == 0
-	assert "Would create AGENTS.md" in capsys.readouterr().out
+	assert "[dry-run] create AGENTS.md" in capsys.readouterr().out
 	assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_rejects_unknown_agent(tmp_path: Path, capsys) -> None:
+	with pytest.raises(SystemExit) as caught:
+		main(["init", "--agent", "windsurf", "--project", str(tmp_path)])
+
+	assert caught.value.code == 2
+	error = capsys.readouterr().err
+	assert "unsupported agent(s): windsurf" in error
+	assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_reports_version(capsys) -> None:
+	with pytest.raises(SystemExit) as caught:
+		main(["--version"])
+
+	assert caught.value.code == 0
+	assert __version__ in capsys.readouterr().out

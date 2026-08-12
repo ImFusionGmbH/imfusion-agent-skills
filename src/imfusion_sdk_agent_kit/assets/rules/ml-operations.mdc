@@ -1,12 +1,12 @@
 ---
 description: ImFusion ML Operations implementation and review guidelines
-globs: ImFusionLib/Include/ImFusion/ML/Operations/*.h,ImFusionLib/Source/ML/Operations/*.cpp
+globs: **/*Operation.h,**/*Operation.cpp
 alwaysApply: false
 ---
 
 # ML Operations Guidelines
 
-Applies when implementing or modifying `ImFusion::ML::Operation` subclasses under `ImFusionLib/Include/ImFusion/ML/Operations` and `ImFusionLib/Source/ML/Operations`.
+Applies when implementing or modifying `ImFusion::ML::Operation` subclasses.
 
 ## Class Structure
 - Derive from `ImFusion::ML::Operation` and place class in `ImFusion::ML` namespace.
@@ -54,9 +54,8 @@ Applies when implementing or modifying `ImFusion::ML::Operation` subclasses unde
   - Get the C++ sub-factory via `ImFusion::ML::getCppOperationFactory()`.
   - Register your class with a unique operation name (typically the class name without namespace).
 
-## Python Bindings and Changelog
-- Add the new operation to Python bindings in `ImFusionLib/Source/ML/PythonBindings/OperationsBindings.cpp` using the appropriate `ml_bind_class_doc*` helper.
-- Add a changelog entry to `ImFusionLib/Source/ML/Changelog.yaml` with the correct tags (Added/Changed/Fixed/Deprecation/API-Break), referencing the exact class name.
+## Python Bindings
+- If the project exposes Python bindings, bind the operation with the appropriate `ml_bind_class_doc*` helper, keeping docstrings and named arguments in sync with the C++ parameters.
 
 ## Doxygen and Grouping
 - Document the class and public/protected members.
@@ -65,17 +64,15 @@ Applies when implementing or modifying `ImFusion::ML::Operation` subclasses unde
 
 ## Implementation Checklist
 - [ ] Class in `ImFusion::ML`, ends with `Operation`, constructor sets `ProcessingPolicy`.
-- [ ] Add files to `CMakeLists.txt` of the ML pluigin.
+- [ ] Add the new files to the `CMakeLists.txt` of the target that builds them.
 - [ ] Public parameters as `AdvancedParameter<T>`/`OpParam<T>` with `p_` prefix and defaults; units documented.
 - [ ] Override appropriate delegate(s); avoid overriding `process(DataItem&)` unless restructuring fields.
 - [ ] Proper device handling and GPU preparation; channel batching supported only when safe.
 - [ ] Use `throwOperationError`/`warnOperationUnexpectedBehaviour`; no raw exceptions for routine failures.
 - [ ] If non-mutating, implement `doesNotModifyInput()`.
 - [ ] Operation registered in C++ factory with unique name.
-- [ ] Python bindings added in `OperationsBindings.cpp` with docstrings and named args.
-- [ ] ML changelog updated in `ImFusionLib/Source/ML/Changelog.yaml`.
-- [ ] Add a C++ test in the `ImFusionLib/Source/ML/Test/Operations` folder.
-- [ ] Add a test case to `test_MLOperations.py` 
+- [ ] Python bindings updated with docstrings and named args, if the project has any.
+- [ ] Test added next to the project's other operation tests, covering CPU and GPU paths where both apply.
 
 @ml-operation-header-template.h
 @ml-operation-cpp-template.cpp
