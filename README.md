@@ -23,7 +23,7 @@ Python 3.10 or newer is required.
 Until the first PyPI release, install straight from the repository instead:
 
 ```sh
-uv tool install git+https://github.com/ImFusionGmbH/imfusion-sdk-agent-kit
+uv tool install git+https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit
 ```
 
 ## Install into a project
