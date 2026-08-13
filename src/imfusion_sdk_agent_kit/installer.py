@@ -12,11 +12,26 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import __version__
-from .renderers import AGENTS_END, AGENTS_START, render_agents
+from .renderers import AGENTS_END, AGENTS_START, SUPPORTED_AGENTS, render_agents
 
 STATE_DIRECTORY = ".imfusion-sdk-agent-kit"
 MANIFEST_PATH = Path(STATE_DIRECTORY) / "manifest.json"
 MANIFEST_SCHEMA = 1
+
+# Project files that indicate an agent is configured for a project.
+AGENT_MARKERS: dict[str, tuple[str, ...]] = {
+	"cursor": (".cursor",),
+	"claude": (".claude", "CLAUDE.md"),
+	"opencode": (".opencode",),
+}
+
+# Variables each agent exports into the shells it runs, which identify the agent driving
+# the current invocation even in a project that has no agent files yet.
+AGENT_ENVIRONMENT: dict[str, tuple[str, ...]] = {
+	"cursor": ("CURSOR_AGENT",),
+	"claude": ("CLAUDECODE",),
+	"opencode": ("OPENCODE_BIN_PATH",),
+}
 
 
 class InstallationError(RuntimeError):
@@ -148,6 +163,38 @@ def _manifest_content(agents: set[str], records: dict[str, dict[str, str]]) -> s
 		)
 		+ "\n"
 	)
+
+
+def detect_agents(project: Path) -> tuple[str, ...]:
+	"""Return the agents project appears to use, in SUPPORTED_AGENTS order."""
+	project = project.resolve()
+	if not project.is_dir():
+		raise InstallationError(f"Project directory does not exist: {project}")
+
+	# A previous installation is the most reliable signal: it makes a bare `init` refresh
+	# exactly what is already installed instead of re-guessing.
+	installed = _load_manifest(project).get("agents") or ()
+	if installed:
+		return tuple(agent for agent in SUPPORTED_AGENTS if agent in installed)
+
+	found = {
+		agent
+		for agent, markers in AGENT_MARKERS.items()
+		if any((project / marker).exists() for marker in markers)
+	}
+	found.update(
+		agent
+		for agent, variables in AGENT_ENVIRONMENT.items()
+		if any(variable in os.environ for variable in variables)
+	)
+	# AGENTS.md is a cross-tool convention, so its presence alone identifies no agent.
+	# It only points at OpenCode once this kit has written its section into it.
+	agents_file = project / "AGENTS.md"
+	if agents_file.is_file() and AGENTS_START in agents_file.read_text(
+		encoding="utf-8", errors="replace"
+	):
+		found.add("opencode")
+	return tuple(agent for agent in SUPPORTED_AGENTS if agent in found)
 
 
 def install(

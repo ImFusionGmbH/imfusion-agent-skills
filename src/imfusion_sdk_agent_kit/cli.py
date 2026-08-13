@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from . import __version__
-from .installer import InstallationConflict, InstallationError, install
+from .installer import InstallationConflict, InstallationError, detect_agents, install
 from .renderers import SUPPORTED_AGENTS
 
 
@@ -42,9 +42,11 @@ def build_parser() -> argparse.ArgumentParser:
 	)
 	init.add_argument(
 		"--agent",
-		required=True,
 		type=_agents,
-		help=f"comma-separated agents: {', '.join(SUPPORTED_AGENTS)}",
+		help=(
+			f"comma-separated agents: {', '.join(SUPPORTED_AGENTS)} "
+			"(default: detect from the project)"
+		),
 	)
 	init.add_argument(
 		"--project",
@@ -72,10 +74,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 	if args.project is not None and args.project_option is not None:
 		parser.error("project directory specified both positionally and with --project")
 	project = args.project_option or args.project or Path.cwd()
+	agents = args.agent
 	try:
+		if agents is None:
+			agents = detect_agents(project)
+			if not agents:
+				print(f"Error: no agent detected in {project}.", file=sys.stderr)
+				print(
+					f"Pass --agent with one or more of: {', '.join(SUPPORTED_AGENTS)}.",
+					file=sys.stderr,
+				)
+				return 2
+			print(f"Detected agent(s): {', '.join(agents)}")
 		result = install(
 			project,
-			args.agent,
+			agents,
 			force=args.force,
 			dry_run=args.dry_run,
 		)

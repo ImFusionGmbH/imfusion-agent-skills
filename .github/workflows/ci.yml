@@ -84,3 +84,7 @@ jobs:
           test -f smoke/.claude/skills/create-imfusion-plugin/SKILL.md
           test -f smoke/.opencode/references/ml-operation-header-template.h
           test -f smoke/AGENTS.md
+          mkdir -p detected/.cursor
+          imfusion-sdk-agent-kit init detected | grep -q "Detected agent(s): cursor"
+          test -f detected/.cursor/rules/cpp-guidelines.mdc
+          test ! -d detected/.claude

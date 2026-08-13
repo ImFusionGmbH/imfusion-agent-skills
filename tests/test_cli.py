@@ -4,6 +4,15 @@ import pytest
 
 from imfusion_sdk_agent_kit import __version__
 from imfusion_sdk_agent_kit.cli import main
+from imfusion_sdk_agent_kit.installer import AGENT_ENVIRONMENT
+
+
+@pytest.fixture
+def clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+	"""Hide the agent that runs the test suite so detection sees only the project."""
+	for variables in AGENT_ENVIRONMENT.values():
+		for variable in variables:
+			monkeypatch.delenv(variable, raising=False)
 
 
 def test_cli_installs_comma_separated_agents(tmp_path: Path, capsys) -> None:
@@ -49,6 +58,40 @@ def test_cli_accepts_legacy_project_option(tmp_path: Path) -> None:
 
 	assert exit_code == 0
 	assert (tmp_path / ".cursor/rules").is_dir()
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_cli_detects_the_agent_when_the_flag_is_omitted(tmp_path: Path, capsys) -> None:
+	(tmp_path / ".cursor").mkdir()
+
+	exit_code = main(["init", str(tmp_path)])
+
+	assert exit_code == 0
+	assert "Detected agent(s): cursor" in capsys.readouterr().out
+	assert (tmp_path / ".cursor/skills").is_dir()
+	assert not (tmp_path / ".claude").exists()
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_cli_reuses_the_agents_from_a_previous_install(tmp_path: Path, capsys) -> None:
+	main(["init", str(tmp_path), "--agent", "cursor,claude"])
+	capsys.readouterr()
+
+	exit_code = main(["init", str(tmp_path)])
+
+	assert exit_code == 0
+	assert "Detected agent(s): cursor, claude" in capsys.readouterr().out
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_cli_explains_how_to_choose_when_detection_fails(tmp_path: Path, capsys) -> None:
+	exit_code = main(["init", str(tmp_path)])
+
+	assert exit_code == 2
+	error = capsys.readouterr().err
+	assert "no agent detected" in error
+	assert "cursor, claude, opencode" in error
+	assert list(tmp_path.iterdir()) == []
 
 
 def test_cli_reports_version(capsys) -> None:

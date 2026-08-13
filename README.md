@@ -31,12 +31,16 @@ uv tool install git+https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit
 Run the command from the root of your ImFusion SDK project:
 
 ```sh
-imfusion-sdk-agent-kit init --agent cursor,claude
+imfusion-sdk-agent-kit init
 ```
 
-To run it once without installing the CLI permanently, use `uvx imfusion-sdk-agent-kit init --agent cursor`.
+To run it once without installing the CLI permanently, use `uvx imfusion-sdk-agent-kit init`.
 
-Choose one or more comma-separated agents:
+Without `--agent`, the command detects which agents to install for. If `.imfusion-sdk-agent-kit/manifest.json` exists it wins outright, so re-running `init` refreshes exactly what is already installed. Otherwise the command combines two signals: agent files in the project (`.cursor/`, `.claude/`, `CLAUDE.md`, `.opencode/`, or an `AGENTS.md` that already contains this kit's section) and the environment of the agent running the command, which covers a project that has no agent files yet.
+
+A bare `AGENTS.md` is deliberately ignored, because several tools read that file and its presence identifies none of them.
+
+If nothing is detected the command exits without writing anything and asks you to pass `--agent`. Name the agents explicitly whenever you want to control the result:
 
 ```sh
 # Cursor
@@ -82,8 +86,10 @@ To update:
 
 ```sh
 uv tool upgrade imfusion-sdk-agent-kit
-imfusion-sdk-agent-kit init --agent cursor,claude
+imfusion-sdk-agent-kit init
 ```
+
+The second command needs no `--agent`, because the manifest already records which agents the project uses.
 
 With a regular Python environment, replace `uv tool upgrade` with `python -m pip install --upgrade imfusion-sdk-agent-kit`.
 

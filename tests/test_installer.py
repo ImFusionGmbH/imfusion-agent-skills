@@ -5,12 +5,22 @@ import pytest
 
 import imfusion_sdk_agent_kit.installer as installer_module
 from imfusion_sdk_agent_kit.installer import (
+	AGENT_ENVIRONMENT,
 	MANIFEST_PATH,
 	InstallationConflict,
 	InstallationError,
+	detect_agents,
 	install,
 )
-from imfusion_sdk_agent_kit.renderers import AGENTS_START, RenderedFile
+from imfusion_sdk_agent_kit.renderers import AGENTS_END, AGENTS_START, RenderedFile
+
+
+@pytest.fixture
+def clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+	"""Hide the agent that runs the test suite so detection sees only the project."""
+	for variables in AGENT_ENVIRONMENT.values():
+		for variable in variables:
+			monkeypatch.delenv(variable, raising=False)
 
 
 def test_first_install_and_idempotent_rerun(tmp_path: Path) -> None:
@@ -172,3 +182,49 @@ def test_modified_obsolete_file_is_kept_and_forgotten(
 	assert result.warnings == ("Kept modified obsolete file .cursor/rules/old.mdc",)
 	manifest = json.loads((tmp_path / MANIFEST_PATH).read_text(encoding="utf-8"))
 	assert old.path.as_posix() not in manifest["files"]
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_finds_nothing_in_an_empty_project(tmp_path: Path) -> None:
+	assert detect_agents(tmp_path) == ()
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_reads_project_markers(tmp_path: Path) -> None:
+	(tmp_path / ".opencode").mkdir()
+	(tmp_path / "CLAUDE.md").write_text("# guidance\n", encoding="utf-8")
+
+	assert detect_agents(tmp_path) == ("claude", "opencode")
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_reads_agent_environment(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	monkeypatch.setenv("CURSOR_AGENT", "1")
+
+	assert detect_agents(tmp_path) == ("cursor",)
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_ignores_unmanaged_agents_file(tmp_path: Path) -> None:
+	(tmp_path / "AGENTS.md").write_text("# project guidance\n", encoding="utf-8")
+
+	assert detect_agents(tmp_path) == ()
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_recognises_a_managed_agents_file(tmp_path: Path) -> None:
+	(tmp_path / "AGENTS.md").write_text(
+		f"# project guidance\n\n{AGENTS_START}\nrules\n{AGENTS_END}\n", encoding="utf-8"
+	)
+
+	assert detect_agents(tmp_path) == ("opencode",)
+
+
+@pytest.mark.usefixtures("clean_environment")
+def test_detect_agents_prefers_the_manifest_over_other_signals(tmp_path: Path) -> None:
+	install(tmp_path, ("cursor",))
+	(tmp_path / ".opencode").mkdir()
+
+	assert detect_agents(tmp_path) == ("cursor",)
