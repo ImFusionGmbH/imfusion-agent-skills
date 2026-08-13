@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Install ImFusion SDK rules and skills for AI coding agents."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "Apache-2.0"
+license = "MIT"
 authors = [
 	{ name = "ImFusion GmbH" },
 ]
