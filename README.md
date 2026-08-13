@@ -49,7 +49,7 @@ imfusion-sdk-agent-kit init --agent claude
 imfusion-sdk-agent-kit init --agent opencode
 
 # A project other than the current directory
-imfusion-sdk-agent-kit init --agent cursor,claude --project path/to/project
+imfusion-sdk-agent-kit init path/to/project --agent cursor,claude
 ```
 
 The command installs native project files:

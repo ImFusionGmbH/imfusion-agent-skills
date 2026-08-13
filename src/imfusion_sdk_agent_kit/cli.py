@@ -35,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 	init = subparsers.add_parser("init", help="install rules and skills")
 	init.add_argument(
+		"project",
+		nargs="?",
+		type=Path,
+		help="project directory (default: current directory)",
+	)
+	init.add_argument(
 		"--agent",
 		required=True,
 		type=_agents,
@@ -42,9 +48,9 @@ def build_parser() -> argparse.ArgumentParser:
 	)
 	init.add_argument(
 		"--project",
+		dest="project_option",
 		type=Path,
-		default=Path.cwd(),
-		help="project directory (default: current directory)",
+		help=argparse.SUPPRESS,
 	)
 	init.add_argument(
 		"--dry-run",
@@ -61,10 +67,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
 	"""Run the command-line interface."""
-	args = build_parser().parse_args(argv)
+	parser = build_parser()
+	args = parser.parse_args(argv)
+	if args.project is not None and args.project_option is not None:
+		parser.error("project directory specified both positionally and with --project")
+	project = args.project_option or args.project or Path.cwd()
 	try:
 		result = install(
-			args.project,
+			project,
 			args.agent,
 			force=args.force,
 			dry_run=args.dry_run,

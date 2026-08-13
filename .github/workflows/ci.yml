@@ -79,7 +79,7 @@ jobs:
           python -m pip install dist/*.whl
           imfusion-sdk-agent-kit --version
           mkdir smoke
-          imfusion-sdk-agent-kit init --agent cursor,claude,opencode --project smoke
+          imfusion-sdk-agent-kit init smoke --agent cursor,claude,opencode
           test -f smoke/.cursor/rules/cpp-guidelines.mdc
           test -f smoke/.claude/skills/create-imfusion-plugin/SKILL.md
           test -f smoke/.opencode/references/ml-operation-header-template.h
