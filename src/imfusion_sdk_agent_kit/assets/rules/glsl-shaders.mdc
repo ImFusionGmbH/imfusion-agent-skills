@@ -1,0 +1,13 @@
+---
+description: GLSL shader coding standards
+globs: **/*.vert,**/*.frag,**/*.geom,**/*.comp,**/*.glh
+alwaysApply: false
+---
+
+# GLSL Shader Guidelines
+
+- Use distinct extensions: `.vert`, `.geom`, `.frag`, `.comp`, `.glh`.
+- Choose sufficiently unique shader filenames; match owning C++ class when applicable.
+- IO blocks: use `in_` and `out_` prefixes.
+- Uniforms: use `u_` prefix.
+- Shared includes: use a common prefix for globals/functions to emulate namespacing.
