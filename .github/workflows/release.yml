@@ -22,7 +22,7 @@ jobs:
         run: |
           version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
           test "v$version" = "${{ github.ref_name }}"
-      - run: python -m build
+      - run: python -m build --wheel
       - run: python -m twine check dist/*
       - run: python .github/scripts/check_assets.py
       - uses: actions/upload-artifact@v7
