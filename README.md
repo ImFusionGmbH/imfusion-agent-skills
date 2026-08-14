@@ -12,7 +12,13 @@ The recommended installation uses [uv](https://docs.astral.sh/uv/getting-started
 uv tool install imfusion-sdk-agent-kit
 ```
 
-If uv is not available, install it with standard pip:
+[pipx](https://pipx.pypa.io/) does the same thing if you already have it:
+
+```sh
+pipx install imfusion-sdk-agent-kit
+```
+
+Without either, install it with standard pip. Prefer a virtual environment, because many Linux distributions refuse a system-wide install:
 
 ```sh
 python -m pip install imfusion-sdk-agent-kit
@@ -34,7 +40,7 @@ Run the command from the root of your ImFusion SDK project:
 imfusion-sdk-agent-kit init
 ```
 
-To run it once without installing the CLI permanently, use `uvx imfusion-sdk-agent-kit init`.
+To run it once without installing the CLI permanently, use `uvx imfusion-sdk-agent-kit init` or `pipx run imfusion-sdk-agent-kit init`.
 
 Without `--agent`, the command detects which agents to install for. If `.imfusion-sdk-agent-kit/manifest.json` exists it wins outright, so re-running `init` refreshes exactly what is already installed. Otherwise the command combines two signals: agent files in the project (`.cursor/`, `.claude/`, `CLAUDE.md`, `.opencode/`, or an `AGENTS.md` that already contains this kit's section) and the environment of the agent running the command, which covers a project that has no agent files yet.
 
