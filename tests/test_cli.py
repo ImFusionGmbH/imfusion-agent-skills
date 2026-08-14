@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from imfusion_sdk_agent_kit import __version__
-from imfusion_sdk_agent_kit.cli import main
-from imfusion_sdk_agent_kit.installer import AGENT_ENVIRONMENT
+from imfusion_agent_skills import __version__
+from imfusion_agent_skills.cli import main
+from imfusion_agent_skills.installer import AGENT_ENVIRONMENT
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def test_cli_installs_comma_separated_agents(tmp_path: Path, capsys) -> None:
 	assert exit_code == 0
 	assert (tmp_path / ".cursor/rules").is_dir()
 	assert (tmp_path / ".claude/rules").is_dir()
-	assert "create .imfusion-sdk-agent-kit/manifest.json" in capsys.readouterr().out
+	assert "create .imfusion-agent-skills/manifest.json" in capsys.readouterr().out
 
 
 def test_cli_reports_conflict(tmp_path: Path, capsys) -> None:

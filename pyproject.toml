@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "imfusion-sdk-agent-kit"
+name = "imfusion-agent-skills"
 version = "0.1.0"
 description = "Install ImFusion SDK rules and skills for AI coding agents."
 readme = "README.md"
@@ -27,12 +27,12 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit"
-Repository = "https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit"
-Issues = "https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit/issues"
+Homepage = "https://github.com/ImFusionGmbH/imfusion-agent-skills"
+Repository = "https://github.com/ImFusionGmbH/imfusion-agent-skills"
+Issues = "https://github.com/ImFusionGmbH/imfusion-agent-skills/issues"
 
 [project.scripts]
-imfusion-sdk-agent-kit = "imfusion_sdk_agent_kit.cli:main"
+imfusion-agent-skills = "imfusion_agent_skills.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -50,7 +50,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-imfusion_sdk_agent_kit = ["assets/**/*"]
+imfusion_agent_skills = ["assets/**/*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

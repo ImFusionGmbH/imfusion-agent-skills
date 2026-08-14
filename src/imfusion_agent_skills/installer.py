@@ -14,7 +14,7 @@ from pathlib import Path
 from . import __version__
 from .renderers import AGENTS_END, AGENTS_START, SUPPORTED_AGENTS, render_agents
 
-STATE_DIRECTORY = ".imfusion-sdk-agent-kit"
+STATE_DIRECTORY = ".imfusion-agent-skills"
 MANIFEST_PATH = Path(STATE_DIRECTORY) / "manifest.json"
 MANIFEST_SCHEMA = 1
 
@@ -188,7 +188,7 @@ def detect_agents(project: Path) -> tuple[str, ...]:
 		if any(variable in os.environ for variable in variables)
 	)
 	# AGENTS.md is a cross-tool convention, so its presence alone identifies no agent.
-	# It only points at OpenCode once this kit has written its section into it.
+	# It only points at OpenCode once this package has written its section into it.
 	agents_file = project / "AGENTS.md"
 	if agents_file.is_file() and AGENTS_START in agents_file.read_text(
 		encoding="utf-8", errors="replace"
@@ -284,7 +284,7 @@ def install(
 		if record.get("kind") == "block":
 			block = _managed_block(existing)
 			if block is not None and _digest(block) == record.get("sha256"):
-				# The file itself may predate the kit, so strip the block but keep the file.
+				# The file itself may predate this package, so strip the block but keep the file.
 				writes[path] = _remove_block(existing)
 				actions.append(f"remove obsolete block from {relative}")
 			else:

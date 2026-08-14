@@ -5,7 +5,7 @@ from importlib.resources import files
 
 import pytest
 
-from imfusion_sdk_agent_kit.renderers import parse_mdc
+from imfusion_agent_skills.renderers import parse_mdc
 
 FRONTMATTER_LINE = re.compile(r"^[A-Za-z][A-Za-z0-9]*: \S")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -13,7 +13,7 @@ AGENT_DIRECTORIES = (".cursor/", ".claude/", ".opencode/")
 
 
 def _assets():
-	return files("imfusion_sdk_agent_kit").joinpath("assets")
+	return files("imfusion_agent_skills").joinpath("assets")
 
 
 def _rules() -> list[tuple[str, str]]:

@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-import imfusion_sdk_agent_kit.installer as installer_module
-from imfusion_sdk_agent_kit.installer import (
+import imfusion_agent_skills.installer as installer_module
+from imfusion_agent_skills.installer import (
 	AGENT_ENVIRONMENT,
 	MANIFEST_PATH,
 	InstallationConflict,
@@ -12,7 +12,7 @@ from imfusion_sdk_agent_kit.installer import (
 	detect_agents,
 	install,
 )
-from imfusion_sdk_agent_kit.renderers import AGENTS_END, AGENTS_START, RenderedFile
+from imfusion_agent_skills.renderers import AGENTS_END, AGENTS_START, RenderedFile
 
 
 @pytest.fixture

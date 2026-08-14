@@ -1,4 +1,4 @@
-"""Allow ``python -m imfusion_sdk_agent_kit`` execution."""
+"""Allow ``python -m imfusion_agent_skills`` execution."""
 
 from .cli import main
 

@@ -5,7 +5,7 @@
 The packaged source of truth is:
 
 ```text
-src/imfusion_sdk_agent_kit/assets/
+src/imfusion_agent_skills/assets/
 ├── rules/       # Cursor .mdc source rules
 ├── skills/      # tool-neutral Agent Skills
 └── references/  # templates referenced by rules
