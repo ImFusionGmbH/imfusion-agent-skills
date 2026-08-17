@@ -1,4 +1,4 @@
-# ImFusion SDK Agent Kit
+# ImFusion Agent Skills
 
 Install project-level rules and skills that help AI coding agents build plugins and applications based on the ImFusion SDK.
 
@@ -9,19 +9,19 @@ Rules provide focused coding guidance when relevant files are open. Skills provi
 The recommended installation uses [uv](https://docs.astral.sh/uv/getting-started/installation/) to install the CLI in an isolated environment:
 
 ```sh
-uv tool install imfusion-sdk-agent-kit
+uv tool install imfusion-agent-skills
 ```
 
 [pipx](https://pipx.pypa.io/) does the same thing if you already have it:
 
 ```sh
-pipx install imfusion-sdk-agent-kit
+pipx install imfusion-agent-skills
 ```
 
 Without either, install it with standard pip. Prefer a virtual environment, because many Linux distributions refuse a system-wide install:
 
 ```sh
-python -m pip install imfusion-sdk-agent-kit
+python -m pip install imfusion-agent-skills
 ```
 
 Python 3.10 or newer is required.
@@ -29,7 +29,7 @@ Python 3.10 or newer is required.
 Until the first PyPI release, install straight from the repository instead:
 
 ```sh
-uv tool install git+https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit
+uv tool install git+https://github.com/ImFusionGmbH/imfusion-agent-skills
 ```
 
 ## Install into a project
@@ -37,12 +37,12 @@ uv tool install git+https://github.com/ImFusionGmbH/ImFusionSDK-Agent-Kit
 Run the command from the root of your ImFusion SDK project:
 
 ```sh
-imfusion-sdk-agent-kit init
+imfusion-agent-skills init
 ```
 
-To run it once without installing the CLI permanently, use `uvx imfusion-sdk-agent-kit init` or `pipx run imfusion-sdk-agent-kit init`.
+To run it once without installing the CLI permanently, use `uvx imfusion-agent-skills init` or `pipx run imfusion-agent-skills init`.
 
-Without `--agent`, the command detects which agents to install for. If `.imfusion-sdk-agent-kit/manifest.json` exists it wins outright, so re-running `init` refreshes exactly what is already installed. Otherwise the command combines two signals: agent files in the project (`.cursor/`, `.claude/`, `CLAUDE.md`, `.opencode/`, or an `AGENTS.md` that already contains this kit's section) and the environment of the agent running the command, which covers a project that has no agent files yet.
+Without `--agent`, the command detects which agents to install for. If `.imfusion-agent-skills/manifest.json` exists it wins outright, so re-running `init` refreshes exactly what is already installed. Otherwise the command combines two signals: agent files in the project (`.cursor/`, `.claude/`, `CLAUDE.md`, `.opencode/`, or an `AGENTS.md` that already contains this package's section) and the environment of the agent running the command, which covers a project that has no agent files yet.
 
 A bare `AGENTS.md` is deliberately ignored, because several tools read that file and its presence identifies none of them.
 
@@ -50,16 +50,16 @@ If nothing is detected the command exits without writing anything and asks you t
 
 ```sh
 # Cursor
-imfusion-sdk-agent-kit init --agent cursor
+imfusion-agent-skills init --agent cursor
 
 # Claude Code
-imfusion-sdk-agent-kit init --agent claude
+imfusion-agent-skills init --agent claude
 
 # OpenCode
-imfusion-sdk-agent-kit init --agent opencode
+imfusion-agent-skills init --agent opencode
 
 # A project other than the current directory
-imfusion-sdk-agent-kit init path/to/project --agent cursor,claude
+imfusion-agent-skills init path/to/project --agent cursor,claude
 ```
 
 The command installs native project files:
@@ -75,37 +75,37 @@ Because the three tools scope guidance differently, the same source rules behave
 - Cursor and Claude Code attach file-scoped rules only when the agent touches matching files.
 - OpenCode has no scoped-rule mechanism, so all rules live in the `AGENTS.md` section and are always in context. Each one is labelled with its name and the file patterns it applies to.
 
-Use `--dry-run` to inspect changes. Use `--force` only when you intend to replace files that conflict with kit-managed paths.
+Use `--dry-run` to inspect changes. Use `--force` only when you intend to replace files that conflict with managed paths.
 
 ## Safe updates
 
-The installer merges into existing agent directories. It records installed file hashes in `.imfusion-sdk-agent-kit/manifest.json` and follows these rules on later runs:
+The installer merges into existing agent directories. It records installed file hashes in `.imfusion-agent-skills/manifest.json` and follows these rules on later runs:
 
-- unchanged kit-managed files are updated to the installed package version;
+- unchanged managed files are updated to the installed package version;
 - unrelated project files and existing `AGENTS.md` content are preserved;
 - user-modified or unknown same-named files stop the installation before any changes are written;
 - `--force` explicitly replaces those conflicts;
-- managed files that the kit no longer ships are removed if unchanged, and kept but no longer managed if you edited them;
+- managed files that the package no longer ships are removed if unchanged, and kept but no longer managed if you edited them;
 - files keep the line endings they already had, so an update does not rewrite every line of a CRLF checkout.
 
 To update:
 
 ```sh
-uv tool upgrade imfusion-sdk-agent-kit
-imfusion-sdk-agent-kit init
+uv tool upgrade imfusion-agent-skills
+imfusion-agent-skills init
 ```
 
 The second command needs no `--agent`, because the manifest already records which agents the project uses.
 
-With a regular Python environment, replace `uv tool upgrade` with `python -m pip install --upgrade imfusion-sdk-agent-kit`.
+With a regular Python environment, replace `uv tool upgrade` with `python -m pip install --upgrade imfusion-agent-skills`.
 
 ## Remove installed guidance
 
-There is no automatic uninstall command in the initial release. Remove the installed ImFusion files listed in `.imfusion-sdk-agent-kit/manifest.json`, then remove `.imfusion-sdk-agent-kit/`. For OpenCode, remove only the section between:
+There is no automatic uninstall command in the initial release. Remove the installed ImFusion files listed in `.imfusion-agent-skills/manifest.json`, then remove `.imfusion-agent-skills/`. For OpenCode, remove only the section between:
 
 ```text
-<!-- imfusion-sdk-agent-kit:start -->
-<!-- imfusion-sdk-agent-kit:end -->
+<!-- imfusion-agent-skills:start -->
+<!-- imfusion-agent-skills:end -->
 ```
 
 Do not remove an entire `.cursor`, `.claude`, `.opencode`, or `AGENTS.md` path if it also contains project-owned content.
@@ -114,7 +114,7 @@ Leaving an agent out of `--agent` does not uninstall it: the installer only mana
 
 ## Give the agent access to the SDK and demos
 
-The installed rules and skills describe ImFusion APIs, but they do not contain the SDK headers or complete example implementations. Several rules and skills tell the agent to consult working examples, so make these available in every project where you install the kit:
+The installed rules and skills describe ImFusion APIs, but they do not contain the SDK headers or complete example implementations. Several rules and skills tell the agent to consult working examples, so make these available in every project where you install this package:
 
 1. Your local ImFusion SDK installation.
 2. The [ImFusion public demos](https://github.com/ImFusionGmbH/public-demos) checked out at the tag matching your SDK version, such as `imfusion-sdk-v4.4`.

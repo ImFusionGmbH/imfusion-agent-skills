@@ -1,4 +1,4 @@
-"""Command-line interface for imfusion-sdk-agent-kit."""
+"""Command-line interface for imfusion-agent-skills."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _agents(value: str) -> tuple[str, ...]:
 def build_parser() -> argparse.ArgumentParser:
 	"""Create the CLI argument parser."""
 	parser = argparse.ArgumentParser(
-		prog="imfusion-sdk-agent-kit",
+		prog="imfusion-agent-skills",
 		description="Install ImFusion SDK rules and skills into a project.",
 	)
 	parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")

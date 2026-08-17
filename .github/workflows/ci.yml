@@ -77,14 +77,14 @@ jobs:
       - name: Smoke test the built wheel
         run: |
           python -m pip install dist/*.whl
-          imfusion-sdk-agent-kit --version
+          imfusion-agent-skills --version
           mkdir smoke
-          imfusion-sdk-agent-kit init smoke --agent cursor,claude,opencode
+          imfusion-agent-skills init smoke --agent cursor,claude,opencode
           test -f smoke/.cursor/rules/cpp-guidelines.mdc
           test -f smoke/.claude/skills/create-imfusion-plugin/SKILL.md
           test -f smoke/.opencode/references/ml-operation-header-template.h
           test -f smoke/AGENTS.md
           mkdir -p detected/.cursor
-          imfusion-sdk-agent-kit init detected | grep -q "Detected agent(s): cursor"
+          imfusion-agent-skills init detected | grep -q "Detected agent(s): cursor"
           test -f detected/.cursor/rules/cpp-guidelines.mdc
           test ! -d detected/.claude
